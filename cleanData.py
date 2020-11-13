@@ -17,6 +17,7 @@ colFixHeads = ['Round Number', 'Home Team', 'Away Team']
 fixReader = pd.read_csv('EPL_Fixtures.csv',usecols = colFixHeads)
 fixReader['FTHG'] = np.nan
 fixReader['FTAG'] = np.nan
+fixReader['FTR'] = np.nan
 
 teamNames = sorted(fixReader['Home Team'].unique())
 print(sorted(teamNames))
@@ -32,7 +33,7 @@ def seasonDataSort(histData,year):
 histReader = histReader.replace('Sheffield United','Sheffield Utd')
 histReader = histReader.replace('Tottenham','Spurs')
 histReader = histReader.replace('Man United','Man Utd')
-teamnames2 = sorted(histReader['HomeTeam'].unique())
+#teamnames2 = sorted(histReader['HomeTeam'].unique())
 
 season1 = seasonDataSort(histReader,'2010-11')
 season2 = seasonDataSort(histReader,'2011-12')
@@ -89,13 +90,45 @@ for index, row in fixReader.iterrows():
 		awayScores.append(away)
 	fixReader['FTHG'][index] = sum(homeScores)/len(homeScores)
 	fixReader['FTAG'][index] = sum(awayScores)/len(awayScores)
+	if fixReader['FTHG'][index] > fixReader['FTAG'][index]:
+		result = 'H'
+	elif fixReader['FTHG'][index] < fixReader['FTAG'][index]:
+		result = 'A'
+	else:
+		result = 'D'
+	fixReader['FTR'][index] = result
 	cnt = cnt + 1
 
 print("count is: ",cnt)
-print(fixReader.head(20))
 
-#		sb.distplot(random.poisson(lam=homeGoals,size=1000), kde=False)
-		#plt.show()
+leagueTable = pd.DataFrame(teamNames, columns=['Team'])
+leagueTable['Points'] = np.nan
+
+for index, row in leagueTable.iterrows():
+	totPts = 0
+	homeGames = fixReader.loc[fixReader['Home Team'] == leagueTable['Team'][index]]
+	homeW = len(homeGames[homeGames['FTR'].str.contains('H')])
+	homeD = len(homeGames[homeGames['FTR'].str.contains('D')])
+	awayGames = fixReader.loc[fixReader['Away Team'] == leagueTable['Team'][index]]
+	awayW = len(awayGames[awayGames['FTR'].str.contains('W')])
+	awayD = len(awayGames[awayGames['FTR'].str.contains('D')])
+	totPts = ((homeW + awayW) * 3) + (homeD + awayD)
+	leagueTable['Points'][index] = totPts
+
+leagueTable = leagueTable.sort_values('Points',ascending=False).reindex()
+
+place = list(range(1,21))
+leagueTable.insert(0,'Place',place)
+
+for index, row in leagueTable.iterrows():
+	pass	
+
+place1 = leagueTable['Team'][leagueTable['Place']==1]
+place2 = leagueTable['Team'][leagueTable['Place']==2]
+place3 = leagueTable['Team'][leagueTable['Place']==3]
 
 
-#print(fixReader.head())
+#fixReader.to_csv('EPLFixturePred.csv', index=False)
+#leagueTable.to_csv('EPLTablePred.csv',index=False)
+
+
