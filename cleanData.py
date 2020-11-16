@@ -11,6 +11,10 @@ from scipy.stats import poisson
 import seaborn as sb
 import matplotlib.pyplot as plt
 
+def seasonDataSort(histData,year):
+	seasonData = histData[histData['Season']==year]
+	return seasonData
+
 
 colFixHeads = ['Round Number', 'Home Team', 'Away Team']
 
@@ -25,10 +29,6 @@ print(sorted(teamNames))
 
 colHistHeads = ['Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','Season']
 histReader = pd.read_csv('EPL_Data.csv',usecols = colHistHeads)
-
-def seasonDataSort(histData,year):
-	seasonData = histData[histData['Season']==year]
-	return seasonData
 
 histReader = histReader.replace('Sheffield United','Sheffield Utd')
 histReader = histReader.replace('Tottenham','Spurs')
@@ -62,20 +62,24 @@ print(aveFixtGoals.at[('Wigan','Swansea'),'FTHG'])
 # Function for Specific Match
 ### 
 
-def getMatchScore(home,away,aveFixt,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc):
+def getMatchScore(home,away,aveFixt,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc,allSeasons):
 	if (home,away) in aveFixt:
-		homeGoals = aveFixt.at[(home,away),'FTHG']
-		awayGoals = aveFixt.at[(home,away),'FTAG']
-		h_scored = random.poisson(lam=homeGoals,size=1)
-		a_scored = random.poisson(lam=awayGoals,size=1)
+		homeForm = aveFixt.at[(home,away),'FTHG']
+		awayForm = aveFixt.at[(home,away),'FTAG']
 	elif (home in aveHomeGoals) and (away in aveHomeGoals):
 		homeForm = 0.5 * (aveHomeGoals[home]+aveAwayConc[away])
 		awayForm = 0.5 * (aveAwayGoals[away]+aveHomeConc[home])
-		h_scored = random.poisson(lam=homeForm,size=1)
-		a_scored = random.poisson(lam=awayForm,size=1)
-	else:
-		h_scored = np.nan
-		a_scored = np.nan
+	elif (home in aveHomeGoals) and (away not in aveHomeGoals):
+		homeForm = 0.5 * (aveHomeGoals[home]+allSeasons['FTHG'].mean())
+		awayForm = 0.5 * (allSeasons['FTAG'].mean()+aveHomeConc[home])
+	elif (home not in aveHomeGoals) and (away in aveHomeGoals):
+		homeForm = 0.5 * (allSeasons['FTHG'].mean()+aveAwayConc[away])
+		awayForm = 0.5 * (aveAwayGoals[away]+allSeasons['FTAG'].mean())
+	elif (home not in aveHomeGoals) and (away not in aveAwayGoals):
+		homeForm = allSeasons['FTHG'].mean()
+		awayForm = allSeasons['FTAG'].mean()
+	h_scored = random.poisson(lam=homeForm,size=1)
+	a_scored = random.poisson(lam=awayForm,size=1)
 	return h_scored, a_scored
 
 cnt = 0
@@ -85,7 +89,7 @@ for index, row in fixReader.iterrows():
 	homeTeam = fixReader['Home Team'][index]
 	awayTeam = fixReader['Away Team'][index]
 	#for i in range(50):
-	home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc)
+	home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc, moreSeas)
 	homeScores.append(home)
 	awayScores.append(away)
 	
@@ -135,8 +139,39 @@ print('The top 3 finishers are: \n', finalTable.head(3))
 
 champName = finalTable['Team'][1]
 
+champPoints = pd.DataFrame(index = range(38),columns = ['Points'])
 
-fixReader.to_csv('EPLFixturePred.csv', index=False)
-finalTable.to_csv('EPLTablePred.csv')
+i = 0
+totpts = 0
+for index,row in fixReader.iterrows():
+	include = False
+	if fixReader['Home Team'][index] == champName:
+		include = True
+		if fixReader['FTR'][index] == 'H':
+			totpts = totpts + 3
+		elif fixReader['FTR'][index] == 'D':
+			totpts = totpts + 1
+	elif fixReader['Away Team'][index] == champName:
+		include = True
+		if fixReader['FTR'][index] == 'A':
+			totpts = totpts + 3
+		elif fixReader['FTR'][index] == 'D':
+			totpts = totpts + 1
+	if include == True:
+		champPoints['Points'][i] = totpts
+		i += 1
+champPoints.index = np.arange(1,len(champPoints)+1)
+'''
+for wk in range(1,39):
+	row = fixReader['Round Number'][wk]['HomeTeam']
+
+for index,row in fixReader.iterrows():
+	if (fixReader['Home Team'][index] == champName) or (fixREader['Away Team'][index]):
+		
+'''		
+print(fixReader.sort_values(by=['Home Team', 'Away Team']))
+print(champSeason)
+#fixReader.to_csv('EPLFixturePred.csv', index=False)
+#finalTable.to_csv('EPLTablePred.csv')
 
 
