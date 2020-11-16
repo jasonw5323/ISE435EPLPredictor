@@ -84,10 +84,11 @@ for index, row in fixReader.iterrows():
 	awayScores = []
 	homeTeam = fixReader['Home Team'][index]
 	awayTeam = fixReader['Away Team'][index]
-	for i in range(50):
-		home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc)
-		homeScores.append(home)
-		awayScores.append(away)
+	#for i in range(50):
+	home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc)
+	homeScores.append(home)
+	awayScores.append(away)
+	
 	fixReader['FTHG'][index] = sum(homeScores)/len(homeScores)
 	fixReader['FTAG'][index] = sum(awayScores)/len(awayScores)
 	if fixReader['FTHG'][index] > fixReader['FTAG'][index]:
@@ -120,15 +121,22 @@ leagueTable = leagueTable.sort_values('Points',ascending=False).reindex()
 place = list(range(1,21))
 leagueTable.insert(0,'Place',place)
 
+finalTable = pd.DataFrame(index = range(20), columns = ['Team', 'Points'])
+i = 0
+
 for index, row in leagueTable.iterrows():
-	pass	
+	finalTable['Team'][i] = leagueTable['Team'][index]
+	finalTable['Points'][i] = leagueTable['Points'][index]
+	i  += 1
+	
+finalTable.index = np.arange(1,len(finalTable)+1)
+	
+print('The top 3 finishers are: \n', finalTable.head(3))
 
-place1 = leagueTable['Team'][leagueTable['Place']==1]
-place2 = leagueTable['Team'][leagueTable['Place']==2]
-place3 = leagueTable['Team'][leagueTable['Place']==3]
+champName = finalTable['Team'][1]
 
 
-#fixReader.to_csv('EPLFixturePred.csv', index=False)
-#leagueTable.to_csv('EPLTablePred.csv',index=False)
+fixReader.to_csv('EPLFixturePred.csv', index=False)
+finalTable.to_csv('EPLTablePred.csv')
 
 
