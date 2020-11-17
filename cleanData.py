@@ -115,8 +115,9 @@ for index, row in leagueTable.iterrows():
 	homeW = len(homeGames[homeGames['FTR'].str.contains('H')])
 	homeD = len(homeGames[homeGames['FTR'].str.contains('D')])
 	awayGames = fixReader.loc[fixReader['Away Team'] == leagueTable['Team'][index]]
-	awayW = len(awayGames[awayGames['FTR'].str.contains('W')])
+	awayW = len(awayGames[awayGames['FTR'].str.contains('A')])
 	awayD = len(awayGames[awayGames['FTR'].str.contains('D')])
+	
 	totPts = ((homeW + awayW) * 3) + (homeD + awayD)
 	leagueTable['Points'][index] = totPts
 
@@ -162,7 +163,7 @@ for index,row in fixReader.iterrows():
 		i += 1
 champPoints.index = np.arange(1,len(champPoints)+1)
 
-fig = plt.figure(figsize = (10,5))
+fig = plt.figure()
 plt.plot(champPoints.index,champPoints['Points'])
 
 plt.xlabel('Match Week')
@@ -171,7 +172,7 @@ plt.title('Total Points of Winning Team')
 plt.show()
 
 
-#fixReader.to_csv('EPLFixturePred.csv', index=False)
-#finalTable.to_csv('EPLTablePred.csv')
+fixReader.to_csv('EPLFixturePred.csv', index=False)
+finalTable.to_csv('EPLTablePred.csv')
 
 
