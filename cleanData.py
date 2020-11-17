@@ -7,61 +7,14 @@ Created on Tue Nov 10 21:09:46 2020
 import pandas as pd
 import numpy as np
 from numpy import random
-from scipy.stats import poisson
-import seaborn as sb
 import matplotlib.pyplot as plt
 
+# Sort data by year
 def seasonDataSort(histData,year):
 	seasonData = histData[histData['Season']==year]
 	return seasonData
 
-
-colFixHeads = ['Round Number', 'Home Team', 'Away Team']
-
-fixReader = pd.read_csv('EPL_Fixtures.csv',usecols = colFixHeads)
-fixReader['FTHG'] = np.nan
-fixReader['FTAG'] = np.nan
-fixReader['FTR'] = np.nan
-
-teamNames = sorted(fixReader['Home Team'].unique())
-print(sorted(teamNames))
-
-
-colHistHeads = ['Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','Season']
-histReader = pd.read_csv('EPL_Data.csv',usecols = colHistHeads)
-
-histReader = histReader.replace('Sheffield United','Sheffield Utd')
-histReader = histReader.replace('Tottenham','Spurs')
-histReader = histReader.replace('Man United','Man Utd')
-#teamnames2 = sorted(histReader['HomeTeam'].unique())
-
-season1 = seasonDataSort(histReader,'2010-11')
-season2 = seasonDataSort(histReader,'2011-12')
-season3 = seasonDataSort(histReader,'2012-13')
-season4 = seasonDataSort(histReader,'2013-14')
-season5 = seasonDataSort(histReader,'2014-15')
-season6 = seasonDataSort(histReader,'2015-16')
-season7 = seasonDataSort(histReader,'2016-17')
-season8 = seasonDataSort(histReader,'2017-18')
-
-seas = [season1,season2,season3,season4,season5,season6,season7,season8]
-
-moreSeas = pd.concat(seas)
-
-aveHomeGoals = moreSeas.groupby('HomeTeam')['FTHG'].mean()
-aveHomeConc = moreSeas.groupby('HomeTeam')['FTAG'].mean()
-aveAwayGoals = moreSeas.groupby('AwayTeam')['FTAG'].mean()
-aveAwayConc = moreSeas.groupby('AwayTeam')['FTHG'].mean()
-
-aveGoals = pd.DataFrame({'HomeScored':aveHomeGoals,'HomeConc':aveHomeConc,'AwayScored':aveAwayGoals,'AwayConc':aveAwayConc})
-
-aveFixtGoals = moreSeas.groupby(['HomeTeam','AwayTeam'])[['FTHG','FTAG']].mean()
-print(aveFixtGoals.at[('Wigan','Swansea'),'FTHG'])
-
-### 
-# Function for Specific Match
-### 
-
+# using poisson distribution, predict the outcome of each fixture
 def getMatchScore(home,away,aveFixt,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc,allSeasons):
 	if (home,away) in aveFixt:
 		homeForm = aveFixt.at[(home,away),'FTHG']
@@ -82,17 +35,70 @@ def getMatchScore(home,away,aveFixt,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwa
 	a_scored = random.poisson(lam=awayForm,size=1)
 	return h_scored, a_scored
 
+'''
+Import 2020-21 fixture info from csv file
+File from https://fixturedownload.com/results/epl-2020
+'''
+
+colFixHeads = ['Round Number', 'Home Team', 'Away Team']
+
+fixReader = pd.read_csv('EPL_Fixtures.csv',usecols = colFixHeads)
+fixReader['FTHG'] = np.nan
+fixReader['FTAG'] = np.nan
+fixReader['FTR'] = np.nan
+
+# Get all team names in the EPL this year
+teamNames = sorted(fixReader['Home Team'].unique())
+
+# Import historical data from 1993-2018
+# File from https://www.kaggle.com/thefc17/epl-results-19932018
+colHistHeads = ['Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','Season']
+histReader = pd.read_csv('EPL_Data.csv',usecols = colHistHeads)
+
+# Replace relevant team names to be consistent between files
+histReader = histReader.replace('Sheffield United','Sheffield Utd')
+histReader = histReader.replace('Tottenham','Spurs')
+histReader = histReader.replace('Man United','Man Utd')
+
+# Pull 2010-18 seasons to be used from historical data file
+season1 = seasonDataSort(histReader,'2010-11')
+season2 = seasonDataSort(histReader,'2011-12')
+season3 = seasonDataSort(histReader,'2012-13')
+season4 = seasonDataSort(histReader,'2013-14')
+season5 = seasonDataSort(histReader,'2014-15')
+season6 = seasonDataSort(histReader,'2015-16')
+season7 = seasonDataSort(histReader,'2016-17')
+season8 = seasonDataSort(histReader,'2017-18')
+
+# Concatenate 2010-18 seasons into one dataset
+seas = [season1,season2,season3,season4,season5,season6,season7,season8]
+moreSeas = pd.concat(seas)
+
+# Get average goals scored andconceded per team based on home or away and
+# input into Dataframe
+aveHomeGoals = moreSeas.groupby('HomeTeam')['FTHG'].mean()
+aveHomeConc = moreSeas.groupby('HomeTeam')['FTAG'].mean()
+aveAwayGoals = moreSeas.groupby('AwayTeam')['FTAG'].mean()
+aveAwayConc = moreSeas.groupby('AwayTeam')['FTHG'].mean()
+
+aveGoals = pd.DataFrame({'HomeScored':aveHomeGoals,'HomeConc':aveHomeConc,'AwayScored':aveAwayGoals,'AwayConc':aveAwayConc})
+aveFixtGoals = moreSeas.groupby(['HomeTeam','AwayTeam'])[['FTHG','FTAG']].mean()
+
+'''
+Function for Specific Match
+'''
+
+# Run through each match, getting specific from function getMatchScore
+# then inputting the match result, (home/away win or draw)
 cnt = 0
 for index, row in fixReader.iterrows():
 	homeScores = []
 	awayScores = []
 	homeTeam = fixReader['Home Team'][index]
 	awayTeam = fixReader['Away Team'][index]
-	#for i in range(50):
 	home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc, moreSeas)
 	homeScores.append(home)
 	awayScores.append(away)
-	
 	fixReader['FTHG'][index] = sum(homeScores)/len(homeScores)
 	fixReader['FTAG'][index] = sum(awayScores)/len(awayScores)
 	if fixReader['FTHG'][index] > fixReader['FTAG'][index]:
@@ -104,11 +110,14 @@ for index, row in fixReader.iterrows():
 	fixReader['FTR'][index] = result
 	cnt = cnt + 1
 
-print("count is: ",cnt)
+'''
+Create league table
+'''
 
 leagueTable = pd.DataFrame(teamNames, columns=['Team'])
 leagueTable['Points'] = np.nan
 
+# Get total number of points each team earned then input it into the league table
 for index, row in leagueTable.iterrows():
 	totPts = 0
 	homeGames = fixReader.loc[fixReader['Home Team'] == leagueTable['Team'][index]]
@@ -117,31 +126,38 @@ for index, row in leagueTable.iterrows():
 	awayGames = fixReader.loc[fixReader['Away Team'] == leagueTable['Team'][index]]
 	awayW = len(awayGames[awayGames['FTR'].str.contains('A')])
 	awayD = len(awayGames[awayGames['FTR'].str.contains('D')])
-	
 	totPts = ((homeW + awayW) * 3) + (homeD + awayD)
 	leagueTable['Points'][index] = totPts
 
+# Sort by most points then input each team's place into the table
 leagueTable = leagueTable.sort_values('Points',ascending=False).reindex()
-
 place = list(range(1,21))
 leagueTable.insert(0,'Place',place)
 
+# Create new league table, inputting correct order with index being their place
 finalTable = pd.DataFrame(index = range(20), columns = ['Team', 'Points'])
 i = 0
-
 for index, row in leagueTable.iterrows():
 	finalTable['Team'][i] = leagueTable['Team'][index]
 	finalTable['Points'][i] = leagueTable['Points'][index]
 	i  += 1
-	
 finalTable.index = np.arange(1,len(finalTable)+1)
-	
+
+'''
+Print top 3 finishers and the number of points they earned
+'''
 print('The top 3 finishers are: \n', finalTable.head(3))
 
-champName = finalTable['Team'][1]
+'''
+Create graph showing number of points the champion of the EPL had at the
+end of each matchweek
+'''
 
+champName = finalTable['Team'][1]
 champPoints = pd.DataFrame(index = range(38),columns = ['Points'])
 
+# Get number of points the team had at the end of each matchweek and input
+# it into a dataframe
 i = 0
 totpts = 0
 for index,row in fixReader.iterrows():
@@ -161,8 +177,11 @@ for index,row in fixReader.iterrows():
 	if include == True:
 		champPoints['Points'][i] = totpts
 		i += 1
+
+# Increase all indexes by one to show specific matchweek
 champPoints.index = np.arange(1,len(champPoints)+1)
 
+# Create plot
 fig = plt.figure()
 plt.plot(champPoints.index,champPoints['Points'])
 
@@ -171,8 +190,11 @@ plt.ylabel('Number of Points')
 plt.title('Total Points of Winning Team')
 plt.show()
 
+'''
+Create 2 outputs to CSV
+- EPLFixturePred.csv shows the score of each fixture of the 2020-21 season
+- EPLTablePred.csv shows the final league table based on the predictions
+'''
 
 fixReader.to_csv('EPLFixturePred.csv', index=False)
 finalTable.to_csv('EPLTablePred.csv')
-
-
