@@ -161,16 +161,16 @@ for index,row in fixReader.iterrows():
 		champPoints['Points'][i] = totpts
 		i += 1
 champPoints.index = np.arange(1,len(champPoints)+1)
-'''
-for wk in range(1,39):
-	row = fixReader['Round Number'][wk]['HomeTeam']
 
-for index,row in fixReader.iterrows():
-	if (fixReader['Home Team'][index] == champName) or (fixREader['Away Team'][index]):
-		
-'''		
-print(fixReader.sort_values(by=['Home Team', 'Away Team']))
-print(champSeason)
+fig = plt.figure(figsize = (10,5))
+plt.plot(champPoints.index,champPoints['Points'])
+
+plt.xlabel('Match Week')
+plt.ylabel('Number of Points')
+plt.title('Total Points of Winning Team')
+plt.show()
+
+
 #fixReader.to_csv('EPLFixturePred.csv', index=False)
 #finalTable.to_csv('EPLTablePred.csv')
 
