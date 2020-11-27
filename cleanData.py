@@ -46,6 +46,7 @@ fixReader = pd.read_csv('EPL_Fixtures.csv',usecols = colFixHeads)
 fixReader['FTHG'] = np.nan
 fixReader['FTAG'] = np.nan
 fixReader['FTR'] = np.nan
+fixReader['Perc'] = np.nan
 
 # Get all team names in the EPL this year
 teamNames = sorted(fixReader['Home Team'].unique())
@@ -90,24 +91,53 @@ Function for Specific Match
 
 # Run through each match, getting specific from function getMatchScore
 # then inputting the match result, (home/away win or draw)
+
+def matchOutcome(homeScore,awayScore):
+	outcome = []
+	for i in range(len(homeScore)):
+		if homeScore[i] > awayScore[i]:
+			outcome.append('H')
+		elif homeScore[i] < awayScore[i]:
+			outcome.append('A')
+		else:
+			outcome.append('A')
+	return outcome
+	
+def overallWins(outcome):
+	homeWins = outcome.count('H')
+	awayWins = outcome.count('A')
+	draws = outcome.count('D')
+	if homeWins > awayWins and homeWins > draws:
+		bestPick = 'H'
+		perc = homeWins / len(outcome)
+	elif awayWins > homeWins and awayWins > draws:
+		bestPick = 'A'
+		perc = awayWins / len(outcome)
+	elif draws > homeWins and draws > awayWins:
+		bestPick = 'D'
+		perc = draws / len(outcome)
+	else:
+			bestPick = 'Tie'
+			perc = 0
+	return bestPick, perc
+		
+	
 cnt = 0
 for index, row in fixReader.iterrows():
 	homeScores = []
 	awayScores = []
 	homeTeam = fixReader['Home Team'][index]
 	awayTeam = fixReader['Away Team'][index]
-	home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc, moreSeas)
-	homeScores.append(home)
-	awayScores.append(away)
+	for i in range(50):
+		home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc, moreSeas)
+		homeScores.append(home)
+		awayScores.append(away)
+	outcome = matchOutcome(homeScores,awayScores)
+	result,bestPerc = overallWins(outcome)
 	fixReader['FTHG'][index] = sum(homeScores)/len(homeScores)
 	fixReader['FTAG'][index] = sum(awayScores)/len(awayScores)
-	if fixReader['FTHG'][index] > fixReader['FTAG'][index]:
-		result = 'H'
-	elif fixReader['FTHG'][index] < fixReader['FTAG'][index]:
-		result = 'A'
-	else:
-		result = 'D'
 	fixReader['FTR'][index] = result
+	fixReader['Perc'][index] = bestPerc
 	cnt = cnt + 1
 
 '''
@@ -187,7 +217,7 @@ plt.plot(champPoints.index,champPoints['Points'])
 
 plt.xlabel('Match Week')
 plt.ylabel('Number of Points')
-plt.title('Total Points of Winning Team')
+plt.title(f'Total Points of {champName}')
 plt.show()
 
 '''
