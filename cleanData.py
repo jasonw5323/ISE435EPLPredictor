@@ -116,12 +116,17 @@ def overallWins(outcome):
 	elif draws > homeWins and draws > awayWins:
 		bestPick = 'D'
 		perc = draws / len(outcome)
-	else:
-			bestPick = 'Tie'
-			perc = 0
+	elif homeWins == awayWins and homeWins > draws:
+			bestPick = 'H A'
+			perc = (homeWins + awayWins) / len(outcome)
+	elif homeWins == draws and homeWins > awayWins:
+			bestPick = 'H D'
+			perc = (homeWins + draws) / len(outcome)
+	elif awayWins == draws and awayWins > homeWins:
+			bestPick = 'A D'
+			perc = (awayWins + draws) / len(outcome)
 	return bestPick, perc
-		
-	
+
 cnt = 0
 for index, row in fixReader.iterrows():
 	homeScores = []
