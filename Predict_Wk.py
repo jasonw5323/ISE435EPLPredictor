@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 10 21:09:46 2020
+Created on Sat Nov 28 01:00:59 2020
 
 @author: jhwhe
 """
+
 import pandas as pd
 import numpy as np
 from numpy import random
-import matplotlib.pyplot as plt
 
 # Sort data by year
 def seasonDataSort(histData,year):
@@ -53,7 +53,9 @@ currentSeas['Season'] = '2020-21'
 fixReader['FTHG'] = np.nan
 fixReader['FTAG'] = np.nan
 fixReader['FTR'] = np.nan
-fixReader['Perc'] = np.nan
+fixReader['HPerc'] = np.nan
+fixReader['APerc'] = np.nan
+fixReader['DPerc'] = np.nan
 
 # Get all team names in the EPL this year
 teamNames = sorted(fixReader['Home Team'].unique())
@@ -116,126 +118,46 @@ def overallWins(outcome):
 	homeWins = outcome.count('H')
 	awayWins = outcome.count('A')
 	draws = outcome.count('D')
+	
+	homePerc = homeWins / len(outcome)
+	awayPerc = awayWins / len(outcome)
+	drawPerc = draws / len(outcome)
 	if homeWins > awayWins and homeWins > draws:
 		bestPick = 'H'
-		perc = homeWins / len(outcome)
 	elif awayWins > homeWins and awayWins > draws:
 		bestPick = 'A'
-		perc = awayWins / len(outcome)
 	elif draws > homeWins and draws > awayWins:
 		bestPick = 'D'
-		perc = draws / len(outcome)
 	elif homeWins == awayWins and homeWins > draws:
 			bestPick = 'H A'
-			perc = (homeWins + awayWins) / len(outcome)
 	elif homeWins == draws and homeWins > awayWins:
 			bestPick = 'H D'
-			perc = (homeWins + draws) / len(outcome)
 	elif awayWins == draws and awayWins > homeWins:
 			bestPick = 'A D'
-			perc = (awayWins + draws) / len(outcome)
-	return bestPick, perc
+	return bestPick, homePerc, awayPerc, drawPerc
 
 cnt = 0
-for index, row in fixReader.iterrows():
+wkGames = fixReader.loc[fixReader['Round Number'] == matchWk]
+for index, row in wkGames.iterrows():
 	homeScores = []
 	awayScores = []
-	homeTeam = fixReader['Home Team'][index]
-	awayTeam = fixReader['Away Team'][index]
-	for i in range(50):
+	homeTeam = wkGames['Home Team'][index]
+	awayTeam = wkGames['Away Team'][index]
+	for i in range(1000):
 		home,away = getMatchScore(homeTeam,awayTeam,aveFixtGoals,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc, moreSeas)
 		homeScores.append(home)
 		awayScores.append(away)
 	outcome = matchOutcome(homeScores,awayScores)
-	result,bestPerc = overallWins(outcome)
-	fixReader['FTHG'][index] = sum(homeScores)/len(homeScores)
-	fixReader['FTAG'][index] = sum(awayScores)/len(awayScores)
-	fixReader['FTR'][index] = result
-	fixReader['Perc'][index] = bestPerc
+	result,homePerc,awayPerc,drawPerc = overallWins(outcome)
+	wkGames['FTHG'][index] = sum(homeScores)/len(homeScores)
+	wkGames['FTAG'][index] = sum(awayScores)/len(awayScores)
+	wkGames['FTR'][index] = result
+	wkGames['HPerc'][index] = homePerc
+	wkGames['APerc'][index] = awayPerc
+	wkGames['DPerc'][index] = drawPerc
 	cnt = cnt + 1
 
-wkOutcome = fixReader.loc[fixReader['Round Number'] == matchWk]
-print(wkOutcome)
-
-'''
-Create league table
-'''
-
-leagueTable = pd.DataFrame(teamNames, columns=['Team'])
-leagueTable['Points'] = np.nan
-
-# Get total number of points each team earned then input it into the league table
-for index, row in leagueTable.iterrows():
-	totPts = 0
-	homeGames = fixReader.loc[fixReader['Home Team'] == leagueTable['Team'][index]]
-	homeW = len(homeGames[homeGames['FTR'].str.contains('H')])
-	homeD = len(homeGames[homeGames['FTR'].str.contains('D')])
-	awayGames = fixReader.loc[fixReader['Away Team'] == leagueTable['Team'][index]]
-	awayW = len(awayGames[awayGames['FTR'].str.contains('A')])
-	awayD = len(awayGames[awayGames['FTR'].str.contains('D')])
-	totPts = ((homeW + awayW) * 3) + (homeD + awayD)
-	leagueTable['Points'][index] = totPts
-
-# Sort by most points then input each team's place into the table
-leagueTable = leagueTable.sort_values('Points',ascending=False).reindex()
-place = list(range(1,21))
-leagueTable.insert(0,'Place',place)
-
-# Create new league table, inputting correct order with index being their place
-finalTable = pd.DataFrame(index = range(20), columns = ['Team', 'Points'])
-i = 0
-for index, row in leagueTable.iterrows():
-	finalTable['Team'][i] = leagueTable['Team'][index]
-	finalTable['Points'][i] = leagueTable['Points'][index]
-	i  += 1
-finalTable.index = np.arange(1,len(finalTable)+1)
-
-'''
-Print top 3 finishers and the number of points they earned
-'''
-print('The top 3 finishers are: \n', finalTable.head(3))
-
-'''
-Create graph showing number of points the champion of the EPL had at the
-end of each matchweek
-'''
-
-champName = finalTable['Team'][1]
-champPoints = pd.DataFrame(index = range(38),columns = ['Points'])
-
-# Get number of points the team had at the end of each matchweek and input
-# it into a dataframe
-i = 0
-totpts = 0
-for index,row in fixReader.iterrows():
-	include = False
-	if fixReader['Home Team'][index] == champName:
-		include = True
-		if fixReader['FTR'][index] == 'H':
-			totpts = totpts + 3
-		elif fixReader['FTR'][index] == 'D':
-			totpts = totpts + 1
-	elif fixReader['Away Team'][index] == champName:
-		include = True
-		if fixReader['FTR'][index] == 'A':
-			totpts = totpts + 3
-		elif fixReader['FTR'][index] == 'D':
-			totpts = totpts + 1
-	if include == True:
-		champPoints['Points'][i] = totpts
-		i += 1
-
-# Increase all indexes by one to show specific matchweek
-champPoints.index = np.arange(1,len(champPoints)+1)
-
-# Create plot
-fig = plt.figure()
-plt.plot(champPoints.index,champPoints['Points'])
-
-plt.xlabel('Match Week')
-plt.ylabel('Number of Points')
-plt.title(f'Total Points of {champName}')
-plt.show()
+# wkOutcome = wkGames.sort_values(by = ['Perc'],ascending = False)
 
 '''
 Create 2 outputs to CSV
@@ -243,5 +165,4 @@ Create 2 outputs to CSV
 - EPLTablePred.csv shows the final league table based on the predictions
 '''
 
-fixReader.to_csv('EPLFixturePred.csv', index=False)
-finalTable.to_csv('EPLTablePred.csv')
+wkGames.to_csv(f'Predictions//Wk{matchWk}Predictions.csv', index=False)
