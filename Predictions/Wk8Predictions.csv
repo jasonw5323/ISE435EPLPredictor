@@ -1,11 +1,11 @@
-Round Number,Home Team,Away Team,AResult,AFTHG,AFTAG,FTHG,FTAG,FTR,Perc
-8,West Brom,Spurs,A,0.0,1.0,1.241,1.464,A,0.686
-8,Arsenal,Aston Villa,A,0.0,3.0,1.951,0.923,H,0.614
-8,Everton,Man Utd,A,1.0,3.0,1.47,1.391,A,0.597
-8,Crystal Palace,Leeds,H,4.0,1.0,1.375,1.259,A,0.587
-8,West Ham,Fulham,H,1.0,0.0,1.539,1.188,A,0.536
-8,Brighton,Burnley,D,0.0,0.0,1.481,1.029,A,0.534
-8,Man City,Liverpool,D,1.0,1.0,1.884,1.254,H,0.531
-8,Chelsea,Sheffield Utd,H,4.0,1.0,1.442,0.977,A,0.523
-8,Southampton,Newcastle,H,2.0,0.0,1.701,1.201,A,0.514
-8,Leicester,Wolves,H,1.0,0.0,1.646,1.087,H,0.504
+Round Number,Home Team,Away Team,AResult,AFTHG,AFTAG,FTHG,FTAG,FTR,HPerc,APerc,DPerc
+8,Brighton,Burnley,D,0.0,0.0,1.498,1.023,H,0.484,0.268,0.248
+8,Southampton,Newcastle,H,2.0,0.0,1.518,1.112,H,0.465,0.279,0.256
+8,Everton,Man Utd,A,1.0,3.0,1.407,1.307,H,0.419,0.352,0.229
+8,Crystal Palace,Leeds,H,4.0,1.0,1.264,1.197,H,0.372,0.359,0.269
+8,Chelsea,Sheffield Utd,H,4.0,1.0,1.452,0.93,H,0.481,0.234,0.285
+8,West Ham,Fulham,H,1.0,0.0,1.519,1.203,H,0.436,0.295,0.269
+8,West Brom,Spurs,A,0.0,1.0,1.338,1.531,A,0.34,0.429,0.231
+8,Leicester,Wolves,H,1.0,0.0,1.663,1.125,H,0.512,0.256,0.232
+8,Man City,Liverpool,D,1.0,1.0,1.955,1.281,H,0.532,0.253,0.215
+8,Arsenal,Aston Villa,A,0.0,3.0,1.923,0.875,H,0.604,0.15,0.246

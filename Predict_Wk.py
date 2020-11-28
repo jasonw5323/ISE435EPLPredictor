@@ -14,27 +14,6 @@ def seasonDataSort(histData,year):
 	seasonData = histData[histData['Season']==year]
 	return seasonData
 
-# using poisson distribution, predict the outcome of each fixture
-def getMatchScore(home,away,aveFixt,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc,allSeasons):
-	if (home,away) in aveFixt:
-		homeForm = aveFixt.at[(home,away),'FTHG']
-		awayForm = aveFixt.at[(home,away),'FTAG']
-	elif (home in aveHomeGoals) and (away in aveHomeGoals):
-		homeForm = 0.5 * (aveHomeGoals[home]+aveAwayConc[away])
-		awayForm = 0.5 * (aveAwayGoals[away]+aveHomeConc[home])
-	elif (home in aveHomeGoals) and (away not in aveHomeGoals):
-		homeForm = 0.5 * (aveHomeGoals[home]+allSeasons['FTHG'].mean())
-		awayForm = 0.5 * (allSeasons['FTAG'].mean()+aveHomeConc[home])
-	elif (home not in aveHomeGoals) and (away in aveHomeGoals):
-		homeForm = 0.5 * (allSeasons['FTHG'].mean()+aveAwayConc[away])
-		awayForm = 0.5 * (aveAwayGoals[away]+allSeasons['FTAG'].mean())
-	elif (home not in aveHomeGoals) and (away not in aveAwayGoals):
-		homeForm = allSeasons['FTHG'].mean()
-		awayForm = allSeasons['FTAG'].mean()
-	h_scored = random.poisson(lam=homeForm,size=1)
-	a_scored = random.poisson(lam=awayForm,size=1)
-	return h_scored, a_scored
-
 '''
 Import 2020-21 fixture info from csv file
 File from https://fixturedownload.com/results/epl-2020
@@ -103,6 +82,27 @@ Function for Specific Match
 # Run through each match, getting specific from function getMatchScore
 # then inputting the match result, (home/away win or draw)
 
+# using poisson distribution, predict the outcome of each fixture
+def getMatchScore(home,away,aveFixt,aveHomeGoals,aveHomeConc,aveAwayGoals,aveAwayConc,allSeasons):
+	if (home,away) in aveFixt:
+		homeForm = aveFixt.at[(home,away),'FTHG']
+		awayForm = aveFixt.at[(home,away),'FTAG']
+	elif (home in aveHomeGoals) and (away in aveHomeGoals):
+		homeForm = 0.5 * (aveHomeGoals[home]+aveAwayConc[away])
+		awayForm = 0.5 * (aveAwayGoals[away]+aveHomeConc[home])
+	elif (home in aveHomeGoals) and (away not in aveHomeGoals):
+		homeForm = 0.5 * (aveHomeGoals[home]+allSeasons['FTHG'].mean())
+		awayForm = 0.5 * (allSeasons['FTAG'].mean()+aveHomeConc[home])
+	elif (home not in aveHomeGoals) and (away in aveHomeGoals):
+		homeForm = 0.5 * (allSeasons['FTHG'].mean()+aveAwayConc[away])
+		awayForm = 0.5 * (aveAwayGoals[away]+allSeasons['FTAG'].mean())
+	elif (home not in aveHomeGoals) and (away not in aveAwayGoals):
+		homeForm = allSeasons['FTHG'].mean()
+		awayForm = allSeasons['FTAG'].mean()
+	h_scored = random.poisson(lam=homeForm,size=1)
+	a_scored = random.poisson(lam=awayForm,size=1)
+	return h_scored, a_scored
+
 def matchOutcome(homeScore,awayScore):
 	outcome = []
 	for i in range(len(homeScore)):
@@ -111,7 +111,7 @@ def matchOutcome(homeScore,awayScore):
 		elif homeScore[i] < awayScore[i]:
 			outcome.append('A')
 		else:
-			outcome.append('A')
+			outcome.append('D')
 	return outcome
 	
 def overallWins(outcome):
@@ -156,6 +156,14 @@ for index, row in wkGames.iterrows():
 	wkGames['APerc'][index] = awayPerc
 	wkGames['DPerc'][index] = drawPerc
 	cnt = cnt + 1
+
+homeTop = wkGames.loc[wkGames['HPerc'] > 0.5]
+awayTop = wkGames.loc[wkGames['APerc'] > 0.5]
+drawTop = wkGames.loc[wkGames['DPerc'] > 0.5]
+topPerc = pd.concat([homeTop,awayTop,drawTop])
+
+for index, row in topPerc.iterrows():
+	print(f'{row["Home Team"]} vs {row["Away Team"]} - {row["FTR"]} - {row["HPerc"]}')
 
 # wkOutcome = wkGames.sort_values(by = ['Perc'],ascending = False)
 
