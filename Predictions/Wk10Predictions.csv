@@ -1,11 +1,11 @@
 Round Number,Home Team,Away Team,AResult,AFTHG,AFTAG,FTHG,FTAG,FTR,HPerc,APerc,DPerc
 10,Arsenal,Wolves,,,,1.836,0.965,H,0.575,0.19,0.235
-10,Brighton,Liverpool,,,,1.346,1.49,A,0.33,0.401,0.269
+10,Brighton,Liverpool,D,1,1,1.346,1.49,A,0.33,0.401,0.269
 10,Chelsea,Spurs,,,,1.649,1.278,H,0.465,0.295,0.24
-10,Crystal Palace,Newcastle,A,0.0,2.0,1.459,1.088,H,0.452,0.296,0.252
-10,Everton,Leeds,,,,1.567,1.117,H,0.488,0.28,0.232
+10,Crystal Palace,Newcastle,A,0,2,1.459,1.088,H,0.452,0.296,0.252
+10,Everton,Leeds,A,0,1,1.567,1.117,H,0.488,0.28,0.232
 10,Leicester,Fulham,,,,1.673,0.995,H,0.533,0.216,0.251
-10,Man City,Burnley,,,,1.996,0.816,H,0.649,0.154,0.197
-10,Southampton,Man Utd,,,,1.298,1.391,A,0.351,0.384,0.265
+10,Man City,Burnley,H,0,5,1.996,0.816,H,0.649,0.154,0.197
+10,Southampton,Man Utd,A,2,3,1.298,1.391,A,0.351,0.384,0.265
 10,West Brom,Sheffield Utd,,,,1.113,1.212,A,0.343,0.391,0.266
 10,West Ham,Aston Villa,,,,1.667,1.177,H,0.48,0.254,0.266
